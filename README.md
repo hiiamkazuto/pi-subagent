@@ -5,8 +5,10 @@
 ## インストール
 
 ```bash
-pi install ~/Workspace/pi-subagent
+pi install git:github.com/hiiamkazuto/pi-subagent
 ```
+
+特定のバージョンに固定したい場合は、`@<tag>` または `@<commit>` を付ける。更新は `pi update --extensions` で行う。
 
 ## ツール
 
@@ -40,7 +42,13 @@ pi install ~/Workspace/pi-subagent
 
 ## 開発
 
+手元の作業ツリーで動作確認するときは、インストールせずに `-e` で一時的に読み込む（git 版をインストール済みの場合はツール名が競合するので、先に `pi remove` で外しておく）。
+
 ```bash
+git clone https://github.com/hiiamkazuto/pi-subagent.git
+cd pi-subagent
+npm install
+pi -e ./src/index.ts
 npm test          # vitest。本物の pi の代わりに test/fixtures/fake-pi.mjs を使う
 npm run typecheck
 ```
