@@ -2,7 +2,7 @@
  * pi-subagent: delegate tasks to background subagents running in separate
  * `pi` processes.
  *
- * Tools: subagent, subagent_status, subagent_result, subagent_cancel.
+ * Tools: subagent, subagent_status, subagent_result, subagent_stop.
  * Inspired by pi's examples/extensions/subagent (pi v1.5.2).
  */
 
@@ -85,7 +85,7 @@ export default function (pi: ExtensionAPI) {
 		// ctx goes stale after shutdown; children settling later must not touch it.
 		shuttingDown = true;
 		uiCtx = undefined;
-		manager.cancelAll();
+		manager.stopAll();
 	});
 
 	const accounted = new Set<string>();
@@ -192,14 +192,14 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 	pi.registerTool({
-		name: "subagent_cancel",
-		label: "Subagent Cancel",
-		description: "Cancel a running subagent.",
+		name: "subagent_stop",
+		label: "Subagent Stop",
+		description: "Stop a running subagent. Partial output stays readable with subagent_result, and it can be continued later with subagent resume.",
 		parameters: Type.Object({ id: Type.String({ description: "Subagent id" }) }),
 		async execute(_id, params) {
-			const ok = manager.cancel(params.id);
+			const ok = manager.stop(params.id);
 			return ok
-				? { content: text(`Cancelling subagent ${params.id}.`), details: undefined }
+				? { content: text(`Stopping subagent ${params.id}.`), details: undefined }
 				: { content: text(`No running subagent with id ${params.id}.`), details: undefined, isError: true };
 		},
 	});

@@ -19,7 +19,7 @@ import {
 	writeMeta,
 } from "./sessions.ts";
 
-export type RunStatus = "running" | "completed" | "failed" | "cancelled";
+export type RunStatus = "running" | "completed" | "failed" | "stopped";
 
 export interface Run {
 	id: string;
@@ -171,9 +171,9 @@ export class SubagentManager {
 		run.endedAt = this.now();
 		run.handle = undefined;
 		const latest = this.latestRun(run.id);
-		if (outcome.cancelled) {
-			run.status = "cancelled";
-			run.errorMessage = "Cancelled";
+		if (outcome.stopped) {
+			run.status = "stopped";
+			run.errorMessage = "Stopped";
 		} else if (outcome.spawnError) {
 			run.status = "failed";
 			run.errorMessage = `Failed to spawn subagent: ${outcome.spawnError}`;
@@ -232,15 +232,15 @@ export class SubagentManager {
 		};
 	}
 
-	cancel(id: string): boolean {
+	stop(id: string): boolean {
 		const run = this.runs.get(id);
 		if (!run?.handle || run.status !== "running") return false;
-		run.handle.cancel();
+		run.handle.stop();
 		return true;
 	}
 
-	cancelAll(): void {
-		for (const run of this.runs.values()) run.handle?.cancel();
+	stopAll(): void {
+		for (const run of this.runs.values()) run.handle?.stop();
 	}
 
 	cleanup(): string[] {

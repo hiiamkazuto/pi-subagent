@@ -16,12 +16,12 @@ export interface ChildOutcome {
 	signal: NodeJS.Signals | null;
 	spawnError?: string;
 	stderr: string;
-	cancelled: boolean;
+	stopped: boolean;
 }
 
 export interface ChildHandle {
 	done: Promise<ChildOutcome>;
-	cancel(): void;
+	stop(): void;
 }
 
 export interface SpawnSpec {
@@ -33,19 +33,19 @@ export interface SpawnSpec {
 
 export function spawnChild(spec: SpawnSpec): ChildHandle {
 	let stderr = "";
-	let cancelled = false;
+	let stopped = false;
 	let exited = false;
 	let killTimer: ReturnType<typeof setTimeout> | undefined;
 	let proc: ReturnType<typeof spawn> | undefined;
 
 	const done = new Promise<ChildOutcome>((resolve) => {
 		let settled = false;
-		const finish = (o: Omit<ChildOutcome, "stderr" | "cancelled">) => {
+		const finish = (o: Omit<ChildOutcome, "stderr" | "stopped">) => {
 			if (settled) return;
 			settled = true;
 			exited = true;
 			if (killTimer) clearTimeout(killTimer);
-			resolve({ ...o, stderr, cancelled });
+			resolve({ ...o, stderr, stopped });
 		};
 		try {
 			proc = spawn(spec.command, spec.args, {
@@ -67,9 +67,9 @@ export function spawnChild(spec: SpawnSpec): ChildHandle {
 
 	return {
 		done,
-		cancel() {
-			if (exited || !proc || cancelled) return;
-			cancelled = true;
+		stop() {
+			if (exited || !proc || stopped) return;
+			stopped = true;
 			proc.kill("SIGTERM");
 			killTimer = setTimeout(() => {
 				if (!exited) proc?.kill("SIGKILL");

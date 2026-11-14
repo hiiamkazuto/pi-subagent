@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-	manager.cancelAll();
+	manager.stopAll();
 	fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -73,13 +73,13 @@ describe("SubagentManager", () => {
 		expect(finished[0].errorMessage).toBe("provider exploded");
 	});
 
-	it("cancels a running child", async () => {
+	it("stops a running child", async () => {
 		const run = start({ agent: "worker", task: "sleep" });
 		expect(manager.result(run.id)?.status).toBe("running");
-		expect(manager.cancel(run.id)).toBe(true);
+		expect(manager.stop(run.id)).toBe(true);
 		await manager.wait(run.id);
-		expect(finished[0].status).toBe("cancelled");
-		expect(manager.cancel(run.id)).toBe(false);
+		expect(finished[0].status).toBe("stopped");
+		expect(manager.stop(run.id)).toBe(false);
 	});
 
 	it("resumes a session; latest run usage only counts that run", async () => {

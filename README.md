@@ -15,7 +15,7 @@ pi install ~/Workspace/pi-subagent
 | `subagent` | `agent`, `task`, `cwd?`, `resume?` | Starts a child in the background and returns its id right away. Call it several times to run children in parallel. There is no concurrency limit. |
 | `subagent_status` | — | Lists the runs in this session. |
 | `subagent_result` | `id` | Returns the output (truncated at 50KB / 2000 lines). Adds the run's usage to the parent's totals, once per run. |
-| `subagent_cancel` | `id` | Sends SIGTERM, then SIGKILL after 5s. |
+| `subagent_stop` | `id` | Sends SIGTERM, then SIGKILL after 5s. |
 
 When a run finishes, a one-line notification is sent as a `followUp`, which wakes the parent agent.
 
