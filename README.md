@@ -1,45 +1,46 @@
 # pi-subagent
 
-Background subagents for [pi](https://pi.dev). Each subagent runs in a separate `pi` process with its own context window. Started from pi v1.5.2's `examples/extensions/subagent`; now maintained independently.
+[pi](https://pi.dev) 用のバックグラウンド・サブエージェント拡張。各サブエージェントは独立したコンテキストを持つ別の `pi` プロセスとして動く。pi v1.5.2 の `examples/extensions/subagent` を元に作り、以後は独自に開発している。
 
-## Install
+## インストール
 
 ```bash
 pi install ~/Workspace/pi-subagent
 ```
 
-## Tools
+## ツール
 
-| Tool | Params | |
+| ツール | 引数 | 説明 |
 |---|---|---|
-| `subagent` | `agent`, `task`, `cwd?`, `resume?` | Starts a child in the background and returns its id right away. Call it several times to run children in parallel. There is no concurrency limit. |
-| `subagent_status` | — | Lists the runs in this session. |
-| `subagent_result` | `id` | Returns the output (truncated at 50KB / 2000 lines). Adds the run's usage to the parent's totals, once per run. |
-| `subagent_stop` | `id` | Sends SIGTERM, then SIGKILL after 5s. |
+| `subagent` | `agent`, `task`, `cwd?`, `resume?` | 子をバックグラウンドで起動し、すぐに ID を返す。並列で動かしたいときは複数回呼ぶ。同時実行数に上限はない。 |
+| `subagent_status` | なし | このセッションで起動した子の一覧と状態を返す。 |
+| `subagent_result` | `id` | 子の出力を返す（50KB / 2000行で切り詰める）。子の使用量を親の合計に加算する。加算は1回の実行につき1度だけ。 |
+| `subagent_stop` | `id` | 実行中の子を停止する（SIGTERM を送り、5秒後に SIGKILL）。途中までの出力は `subagent_result` で読め、`resume` で続きを依頼できる。 |
 
-When a run finishes, a one-line notification is sent as a `followUp`, which wakes the parent agent.
+子が終わると、1行の完了通知が `followUp` として届き、親エージェントが次のターンを始める。
 
-## Agents
+## エージェント
 
-- Built-in: `scout`, `worker` (`agents/`).
-- `~/.pi/agent/agents/*.md` adds agents. A file with the same name as a built-in replaces it.
-- Frontmatter: `name`, `description`, `tools?`, `model?` (`provider/id` or `id`), `thinking?`. If `model` or `thinking` is omitted, the parent's value is used. An unknown model falls back to the parent's model with a warning.
+- 組み込みは `scout` と `worker`（`agents/` にある）。
+- `~/.pi/agent/agents/*.md` に置いたエージェントも読み込む。組み込みと同じ名前なら、そちらで上書きされる。
+- frontmatter に書ける項目は `name`、`description`、`tools?`、`model?`（`provider/id` または `id`）、`thinking?`。
+- `model` と `thinking` は省略すると親と同じ値になる。見つからないモデルを指定した場合は、親のモデルで実行し、結果に警告を付ける。
 
-## Sessions
+## セッション
 
-- Child sessions are stored in `~/.pi/agent/subagent-sessions/`, so they don't show up in `/resume`. A run's id is its session id.
-- `resume: <id>` continues a session with the same agent and cwd.
-- Results can still be read after the parent restarts, because they are re-read from disk.
-- Files not modified for 7 days are deleted on `session_start`.
-- Running children are killed on `session_shutdown`.
+- 子セッションは `~/.pi/agent/subagent-sessions/` に保存する。pi 標準の置き場とは別なので、`/resume` の一覧には出ない。実行 ID はセッション ID と同じ。
+- `resume: <id>` を渡すと、同じエージェントと cwd でそのセッションの続きを依頼する。
+- 親を再起動しても、結果はセッションファイルから読み直せる。
+- 最終更新から7日を過ぎたファイルは、`session_start` のときに自動で削除する。
+- 親の `session_shutdown` のときに、実行中の子はすべて停止する。
 
-## Depth
+## 深さの制御
 
-`PI_SUBAGENT_DEPTH` sets how many more levels of subagents may be spawned. Unset means 1. Each child gets the value minus 1. The tools are only registered when the value is at least 1.
+環境変数 `PI_SUBAGENT_DEPTH` は「この先まだ何段サブエージェントを作れるか」を表す。未設定なら1とみなす。子には「値−1」を渡し、値が1以上のときだけツールを登録する。デフォルトでは、子はサブエージェントを起動できない。
 
-## Development
+## 開発
 
 ```bash
-npm test          # vitest; uses test/fixtures/fake-pi.mjs instead of real pi
+npm test          # vitest。本物の pi の代わりに test/fixtures/fake-pi.mjs を使う
 npm run typecheck
 ```
