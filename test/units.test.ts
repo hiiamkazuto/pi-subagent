@@ -64,7 +64,7 @@ describe("resolveModel", () => {
 describe("buildChildArgs", () => {
 	it("omits unset options", () => {
 		const args = buildChildArgs({
-			agent: { name: "w", description: "", systemPrompt: "", source: "builtin", filePath: "" },
+			agent: { name: "w", description: "", systemPrompt: "", source: "builtin" },
 			task: "t",
 			sessionId: "id1",
 			sessionDir: "/s",

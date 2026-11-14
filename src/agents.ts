@@ -1,14 +1,12 @@
 /**
- * Agent discovery: built-in agents shipped with this package, overridden or
+ * Agent discovery: built-in agents (src/builtin-agents.ts), overridden or
  * extended by user agents in ~/.pi/agent/agents/*.md.
  */
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
-
-export const BUILTIN_AGENTS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "agents");
+import { BUILTIN_AGENTS } from "./builtin-agents.ts";
 
 export interface AgentConfig {
 	name: string;
@@ -20,7 +18,6 @@ export interface AgentConfig {
 	thinking?: string;
 	systemPrompt: string;
 	source: "builtin" | "user";
-	filePath: string;
 }
 
 type AgentFrontmatter = {
@@ -44,7 +41,7 @@ function optionalString(value: unknown): string | undefined {
 	return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-export function loadAgentsFromDir(dir: string, source: AgentConfig["source"]): AgentConfig[] {
+export function loadUserAgents(dir: string): AgentConfig[] {
 	let entries: fs.Dirent[];
 	try {
 		entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -68,8 +65,7 @@ export function loadAgentsFromDir(dir: string, source: AgentConfig["source"]): A
 				model: optionalString(frontmatter.model),
 				thinking: optionalString(frontmatter.thinking),
 				systemPrompt: body,
-				source,
-				filePath,
+				source: "user",
 			});
 		} catch {
 			// One broken file must not hide the other agents.
@@ -79,9 +75,9 @@ export function loadAgentsFromDir(dir: string, source: AgentConfig["source"]): A
 }
 
 /** Built-in agents first; user agents with the same name replace them. */
-export function discoverAgents(userDir: string, builtinDir: string = BUILTIN_AGENTS_DIR): AgentConfig[] {
+export function discoverAgents(userDir: string): AgentConfig[] {
 	const map = new Map<string, AgentConfig>();
-	for (const agent of loadAgentsFromDir(builtinDir, "builtin")) map.set(agent.name, agent);
-	for (const agent of loadAgentsFromDir(userDir, "user")) map.set(agent.name, agent);
+	for (const agent of BUILTIN_AGENTS) map.set(agent.name, agent);
+	for (const agent of loadUserAgents(userDir)) map.set(agent.name, agent);
 	return Array.from(map.values());
 }

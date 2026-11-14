@@ -23,7 +23,7 @@ pi install git:github.com/hiiamkazuto/pi-subagent
 
 ## エージェント
 
-- 組み込みは `scout` と `worker`（`agents/` にある）。
+- 組み込みは `scout` と `worker`（`src/builtin-agents.ts` で定義）。
 - `~/.pi/agent/agents/*.md` に置いたエージェントも読み込む。組み込みと同じ名前なら、そちらで上書きされる。
 - frontmatter に書ける項目は `name`、`description`、`tools?`、`model?`（`provider/id` または `id`）、`thinking?`。
 - `model` と `thinking` は省略すると親と同じ値になる。見つからないモデルを指定した場合は、親のモデルで実行し、結果に警告を付ける。

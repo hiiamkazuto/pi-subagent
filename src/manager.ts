@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { type AgentConfig, BUILTIN_AGENTS_DIR, discoverAgents } from "./agents.ts";
+import { type AgentConfig, discoverAgents } from "./agents.ts";
 import { buildChildArgs, DEPTH_ENV, type ModelLookup, resolveModel } from "./launch.ts";
 import { type ChildHandle, type ChildOutcome, getPiInvocation, spawnChild } from "./runner.ts";
 import {
@@ -58,7 +58,6 @@ export interface ResultView {
 export interface ManagerOptions {
 	sessionDir: string;
 	userAgentsDir: string;
-	builtinAgentsDir?: string;
 	/** Remaining depth of *this* process; children get one less. */
 	depth: number;
 	env?: NodeJS.ProcessEnv;
@@ -77,7 +76,7 @@ export class SubagentManager {
 	}
 
 	agents(): AgentConfig[] {
-		return discoverAgents(this.opts.userAgentsDir, this.opts.builtinAgentsDir ?? BUILTIN_AGENTS_DIR);
+		return discoverAgents(this.opts.userAgentsDir);
 	}
 
 	list(): Run[] {
